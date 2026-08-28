@@ -1,0 +1,27 @@
+# Données expérimentales
+dataset/
+
+# Ressources locales de simulation
+simulation/htdocs/*
+!simulation/htdocs/README.md
+
+# Artefacts générés
+models/artifacts/
+models/explanations/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Environnement
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
