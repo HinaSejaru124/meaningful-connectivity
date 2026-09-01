@@ -1,49 +1,31 @@
-from __future__ import annotations
-
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
+
+
+ModelName = Literal[
+    "logistic_regression",
+    "random_forest",
+    "gradient_boosting",
+]
 
 
 class PredictionRequest(BaseModel):
-    """
-    Données réseau et applicatives nécessaires à une prédiction.
 
-    Toutes les features correspondent aux features utilisées par
-    le pipeline ML.
-    """
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "model": "gradient_boosting",
-                "bandwidth": 5.0,
-                "concurrent_users": 3,
-                "deadline_seconds": 10.0,
-                "interaction_level": 0,
-                "jitter": 2.0,
-                "latency": 50.0,
-                "packet_loss": 1.0,
-                "resource_size_mb": 2.5,
-                "service_type": "pdf",
-            }
-        }
-    )
-
-    model: str = Field(
-        default="gradient_boosting",
+    model: ModelName = Field(
+        ...,
         description="Modèle ML utilisé pour la prédiction.",
     )
 
     bandwidth: float = Field(
         ...,
-        gt=0,
-        description="Bande passante disponible en Mbit/s.",
+        ge=0,
+        description="Bande passante en Mbit/s.",
     )
 
     concurrent_users: int = Field(
         ...,
-        ge=1,
+        ge=0,
         description="Nombre d'utilisateurs concurrents.",
     )
 
@@ -56,32 +38,32 @@ class PredictionRequest(BaseModel):
     interaction_level: int = Field(
         ...,
         ge=0,
-        description="Niveau d'interaction requis par le service.",
+        description="Niveau d'interaction du service.",
     )
 
     jitter: float = Field(
         ...,
         ge=0,
-        description="Gigue réseau en millisecondes.",
+        description="Gigue en millisecondes.",
     )
 
     latency: float = Field(
         ...,
         ge=0,
-        description="Latence réseau en millisecondes.",
+        description="Latence en millisecondes.",
     )
 
     packet_loss: float = Field(
         ...,
         ge=0,
         le=100,
-        description="Taux de perte de paquets en pourcentage.",
+        description="Perte de paquets en pourcentage.",
     )
 
     resource_size_mb: float = Field(
         ...,
-        gt=0,
-        description="Taille de la ressource en mégaoctets.",
+        ge=0,
+        description="Taille de la ressource en MB.",
     )
 
     service_type: str = Field(
@@ -91,31 +73,22 @@ class PredictionRequest(BaseModel):
     )
 
 
-class PredictionResponse(BaseModel):
-    model: str
-    prediction: int
-    meaningful: bool
-    probability_meaningful: float | None
+class ExplainRequest(PredictionRequest):
+    pass
 
 
-class TrainRequest(BaseModel):
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "model": "gradient_boosting"
-            }
-        }
-    )
+class TrainResponse(BaseModel):
 
-    model: str = Field(
-        default="gradient_boosting",
-        description="Modèle à entraîner.",
-    )
+    dataset_size: int
+    train_size: int
+    test_size: int
+    model_version: str | None
+    available_models: list[str]
 
 
-class DatasetInfoResponse(BaseModel):
+class SaveResponse(BaseModel):
+
+    saved: bool
+    model_version: str | None
     path: str
-    observations: int
-    features: list[str]
-    target: str
-    target_distribution: dict[str, int]
+    models: list[str]

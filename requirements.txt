@@ -28,6 +28,8 @@ shap
 fastapi
 uvicorn
 joblib
+PyJWT
+bcrypt
 
 # ============================================================================
 # Network / project dependencies

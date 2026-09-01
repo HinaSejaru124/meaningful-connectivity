@@ -1,206 +1,46 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 
-from .schemas import (
-    DatasetInfoResponse,
-    PredictionRequest,
-    PredictionResponse,
-    TrainRequest,
-)
-from .service import APIService
+from .routers.auth import router as auth_router
+from .routers.health import router as health_router
+from .routers.prediction import router as prediction_router
+from .routers.explain import router as explain_router
+from .routers.models import router as models_router
 
 
 app = FastAPI(
     title="Meaningful Connectivity API",
     description=(
         "API d'évaluation de la meaningful connectivity "
-        "pour les services éducatifs."
+        "pour les services éducatifs en contexte de faible connectivité. "
+        "L'API expose la prédiction ML et son explication par SHAP."
     ),
-    version="1.0.0",
-    openapi_tags=[
-        {
-            "name": "System",
-            "description": "État et informations générales de l'API.",
-        },
-        {
-            "name": "Dataset",
-            "description": "Informations relatives au dataset utilisé.",
-        },
-        {
-            "name": "Models",
-            "description": "Informations et gestion des modèles ML.",
-        },
-        {
-            "name": "Training",
-            "description": "Entraînement et génération de versions de modèles.",
-        },
-        {
-            "name": "Prediction",
-            "description": "Classification de nouvelles sessions.",
-        },
-    ],
+    version="0.1.0",
 )
 
-service = APIService()
 
-
-# ============================================================================
-# System
-# ============================================================================
+app.include_router(auth_router)
+app.include_router(health_router)
+app.include_router(prediction_router)
+app.include_router(explain_router)
+app.include_router(models_router)
 
 
 @app.get(
-    "/health",
+    "/",
     tags=["System"],
+    summary="Informations générales sur l'API",
 )
-def health():
-    return {
-        "status": "ok",
-        "service": "meaningful-connectivity-api",
-    }
-
-
-# ============================================================================
-# Dataset
-# ============================================================================
-
-
-@app.get(
-    "/dataset",
-    response_model=DatasetInfoResponse,
-    tags=["Dataset"],
-)
-def dataset_info():
-
-    try:
-        return service.dataset_info()
-
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        ) from exc
-
-
-# ============================================================================
-# Models
-# ============================================================================
-
-
-@app.get(
-    "/models",
-    tags=["Models"],
-)
-def list_models():
+def root():
 
     return {
-        "models": [
-            "logistic_regression",
-            "random_forest",
-            "gradient_boosting",
-        ]
+        "name": "Meaningful Connectivity API",
+        "version": "0.1.0",
+        "documentation": "/docs",
+        "endpoints": {
+            "auth": "/auth/login",
+            "health": "/health",
+            "prediction": "/predict",
+            "explainability": "/explain",
+            "models": "/models",
+        },
     }
-
-
-# ============================================================================
-# Training
-# ============================================================================
-
-
-@app.post(
-    "/models/train",
-    tags=["Training"],
-)
-def train_model(
-    request: TrainRequest,
-):
-
-    try:
-        return service.train(
-            request.model
-        )
-
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        ) from exc
-
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        ) from exc
-
-
-# ============================================================================
-# Model versions
-# ============================================================================
-
-
-@app.get(
-    "/models/versions",
-    tags=["Models"],
-)
-def list_model_versions(
-    model: str | None = None,
-):
-
-    try:
-        return {
-            "versions": service.list_versions(
-                model
-            )
-        }
-
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        ) from exc
-
-
-# ============================================================================
-# Prediction
-# ============================================================================
-
-
-@app.post(
-    "/predict",
-    response_model=PredictionResponse,
-    tags=["Prediction"],
-)
-def predict(
-    request: PredictionRequest,
-):
-
-    features = request.model_dump(
-        exclude={"model"}
-    )
-
-    try:
-
-        return service.predict(
-            request.model,
-            features,
-        )
-
-    except FileNotFoundError as exc:
-
-        raise HTTPException(
-            status_code=404,
-            detail=str(exc),
-        ) from exc
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        ) from exc
-
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        ) from exc

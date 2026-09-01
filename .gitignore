@@ -25,3 +25,7 @@ env/
 
 # OS
 .DS_Store
+
+# Variables d'environnement
+.env
+.env.local
