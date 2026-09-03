@@ -41,6 +41,19 @@ class DatasetWriter:
 
         file_exists = self.dataset_path.exists()
 
+        if file_exists and self.dataset_path.stat().st_size > 0:
+            # Protection contre un fichier laissé sans retour à la
+            # ligne final (ex. processus interrompu en plein milieu
+            # d'une écriture) : sans ce contrôle, la prochaine ligne
+            # ajoutée fusionnerait avec la dernière ligne existante
+            # (le dernier champ de l'une collé au premier champ de
+            # l'autre), corrompant silencieusement le CSV.
+            with self.dataset_path.open("rb") as check_handle:
+                check_handle.seek(-1, 2)
+                if check_handle.read(1) != b"\n":
+                    with self.dataset_path.open("a", encoding="utf-8") as fix_handle:
+                        fix_handle.write("\n")
+
         with self.dataset_path.open("a", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=self.fieldnames)
 

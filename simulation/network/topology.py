@@ -259,6 +259,25 @@ class RangeHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             file_object.close()
 
 
+    def do_POST(self):
+        # Support pour les scénarios conversationnels : consomme le
+        # corps de la requête entrante (message utilisateur, petit),
+        # puis sert le fichier statique correspondant à l'URL comme
+        # réponse -- réutilise do_GET() tel quel, ce qui permet une
+        # réponse potentiellement plus grosse et de taille variable
+        # que la requête, contrairement à do_PUT (upload) qui ne
+        # renvoie jamais de corps.
+        content_length = int(self.headers.get("Content-Length", 0))
+
+        remaining = content_length
+        while remaining > 0:
+            chunk = self.rfile.read(min(64 * 1024, remaining))
+            if not chunk:
+                break
+            remaining -= len(chunk)
+
+        self.do_GET()
+
     def do_PUT(self):
         # Support minimal pour les scénarios d'upload : accepte le
         # corps de la requête, le consomme entièrement (pour que le

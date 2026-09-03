@@ -12,6 +12,8 @@ from simulation.scenarios.video_streaming import VideoStreamingScenario
 from simulation.scenarios.webpage import WebPageScenario
 from simulation.scenarios.upload import UploadScenario
 from simulation.scenarios.quiz_interactive import InteractiveQuizScenario
+from simulation.scenarios.chatbot import ChatbotScenario
+from simulation.scenarios.ai_agent import AgentScenario
 
 
 # ============================================================================
@@ -25,6 +27,8 @@ SCENARIOS = {
     "webpage": WebPageScenario,
     "upload": UploadScenario,
     "quiz_interactive": InteractiveQuizScenario,
+    "chatbot": ChatbotScenario,
+    "ai_agent": AgentScenario,
 }
 
 
