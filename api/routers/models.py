@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from api.auth.dependencies import require_admin
 
@@ -26,8 +26,8 @@ def status():
     summary="Entraîner un modèle à partir d'un dataset fourni (admin)",
 )
 def train(
-    dataset_path: str | None = None,
-    model_names: list[str] | None = None,
+    dataset_path: str | None = Body(default=None),
+    model_names: list[str] | None = Body(default=None),
     admin: dict = Depends(require_admin),
 ):
     _ = admin

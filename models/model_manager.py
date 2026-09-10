@@ -7,12 +7,10 @@ from typing import Any
 import joblib
 import pandas as pd
 
-from sklearn.model_selection import train_test_split
-
 from .config import DATASET_PATH, RANDOM_STATE, TEST_SIZE
 from .data_loader import load_dataset
 from .evaluate import evaluate_model
-from .train import build_models
+from .train import build_grouped_split, build_models
 
 
 class ModelManager:
@@ -76,12 +74,11 @@ class ModelManager:
 
         X, y, df = load_dataset()
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
+        df_for_split = df.copy()
+        X_train, X_test, y_train, y_test, train_sessions, test_sessions = build_grouped_split(
+            df_for_split,
             test_size=TEST_SIZE,
             random_state=RANDOM_STATE,
-            stratify=y,
         )
 
         model = models[model_name]

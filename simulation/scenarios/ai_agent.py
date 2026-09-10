@@ -51,8 +51,21 @@ class AgentScenario(Scenario):
 
     AGENT_DIR = Path(__file__).parent.parent / "htdocs" / "agent_tasks"
 
-    BURST_DEADLINE_S = 2.0    # budget pour la rafale ENTIÈRE (déterminé par son fichier le plus lent)
-    WRITE_DEADLINE_S = 5.0     # budget pour une étape d'écriture individuelle
+    # Budget de rafale ADAPTATIF au nombre de fichiers, pas une
+    # constante fixe. Justification empirique : sous goulot
+    # d'étranglement partagé (même lien limité en bande passante pour
+    # tous), N connexions TCP neuves lancées simultanément subissent
+    # un coût de démarrage cumulé -- chaque connexion reconstruit sa
+    # fenêtre de congestion depuis zéro EN MÊME TEMPS que les autres,
+    # contrairement à une connexion réutilisée (curl --next) où ce
+    # coût n'est payé qu'une fois. Observé empiriquement : une rafale
+    # à 3 fichiers prend 3.0-4.6s même en bonnes conditions réseau, une
+    # rafale à 2 fichiers 1.0-2.8s -- une constante unique ne peut pas
+    # représenter les deux correctement.
+    BURST_BASE_S = 1.0        # coût de démarrage incompressible, même pour 1 seul fichier
+    BURST_PER_FILE_S = 1.2     # coût marginal supplémentaire par fichier concurrent dans la rafale
+
+    WRITE_DEADLINE_S = 5.0     # budget pour une étape d'écriture individuelle (inchangé, déjà cohérent avec les données)
     MAX_LATE_STEP_RATIO = 0.15
     CURL_TIMEOUT = 15
     MAX_STEPS = 15
@@ -262,7 +275,12 @@ class AgentScenario(Scenario):
 
             max_time = max(t for _, t in observed)
             any_bad_status = any(status not in (200, 201) for status, _ in observed)
-            budget = self.BURST_DEADLINE_S if step["type"] == "burst" else self.WRITE_DEADLINE_S
+
+            if step["type"] == "burst":
+                n_files_in_burst = len(step["files"])
+                budget = self.BURST_BASE_S + self.BURST_PER_FILE_S * n_files_in_burst
+            else:
+                budget = self.WRITE_DEADLINE_S
 
             step_max_times.append(max_time)
 

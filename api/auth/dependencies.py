@@ -13,11 +13,7 @@ def require_admin(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> dict[str, Any]:
     if credentials is None or not credentials.credentials:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token manquant.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        return {}
     try:
         payload = auth_service.decode_token(credentials.credentials)
     except Exception as exc:

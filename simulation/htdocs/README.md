@@ -101,3 +101,21 @@ Pour reproduire une campagne nécessitant des ressources locales :
 4. lancer la campagne de simulation.
 
 Les ressources ne sont pas considérées comme faisant partie du dataset ML lui-même : elles servent à provoquer les conditions applicatives dont les métriques seront ensuite collectées.
+
+## Ressources calibrées de l'agent IA
+
+Le scénario `ai_agent` dispose de six tâches locales calibrées autour de la
+frontière de décision, générées à la demande afin de ne pas versionner les
+binaires :
+
+```bash
+python3 simulation/fixtures/generate_agent_resources.py
+```
+
+Les tâches `task_tiny_a/b`, `task_small_a/b`, `task_medium_a/b`,
+`task_light_a/b`, `task_target_a/b` et `task_heavy_a/b` couvrent environ
+10 %, 20 %, 30 %, 50 %, 100 % et 180 % de la cible de transfert. Les trois
+premiers niveaux ajoutent des cas susceptibles de réussir même lorsque le
+débit est partagé entre plusieurs clients. Chaque tâche contient deux
+rafales de lecture parallèles et deux écritures séquentielles. La graine `42`
+garantit des tailles reproductibles.

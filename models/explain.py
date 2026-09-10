@@ -28,11 +28,10 @@ import numpy as np
 import pandas as pd
 import shap
 
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import (
-    RandomForestClassifier,
     HistGradientBoostingClassifier,
+    RandomForestClassifier,
 )
 
 from .config import (
@@ -41,7 +40,7 @@ from .config import (
     TEST_SIZE,
 )
 from .data_loader import load_dataset
-from .train import build_models
+from .train import build_grouped_split, build_models
 
 
 # ============================================================================
@@ -807,17 +806,25 @@ def main():
     )
 
     # ------------------------------------------------------------------------
-    # Split identique à run_experiments.py
+    # Split groupé par session_id pour éviter toute fuite entre train et test
     # ------------------------------------------------------------------------
 
-    X_train, X_test, y_train, y_test = (
-        train_test_split(
-            X,
-            y,
-            test_size=TEST_SIZE,
-            random_state=RANDOM_STATE,
-            stratify=y,
-        )
+    X_train, X_test, y_train, y_test, train_sessions, test_sessions = build_grouped_split(
+        df,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+    )
+
+    assert set(train_sessions).isdisjoint(set(test_sessions))
+
+    print(
+        f"Train sessions: "
+        f"{len(set(train_sessions))}"
+    )
+
+    print(
+        f"Test sessions : "
+        f"{len(set(test_sessions))}"
     )
 
     print(
